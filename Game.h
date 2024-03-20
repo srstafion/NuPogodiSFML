@@ -5,6 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <iostream>
+#include <Windows.h>
 using namespace sf;
 using namespace std;
 
@@ -17,6 +18,19 @@ private:
 
 	RectangleShape screen;
 	Texture screenT;
+
+	RectangleShape bunny;
+	Texture bunnyT;
+	int bunnyState = 0;
+	int ticks = 0;
+
+	RectangleShape chicken;
+	Texture chickenT;
+	int chickenState = 0;
+	int failSide;
+
+	vector<RectangleShape> lives;
+	Texture life;
 
 	RectangleShape frame;
 	Texture frameT;
@@ -52,6 +66,9 @@ private:
 	void showInfoEggs();
 	void moveEggs();
 	void reset();
+	void BunnyAniation();
+	void gameOver();
+	void chickenAnimation();
 public:
 	Game();
 	~Game();

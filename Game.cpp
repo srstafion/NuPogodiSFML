@@ -59,7 +59,33 @@ void Game::render()
         }
     }
     window.draw(score);
-    window.display();
+
+    for (int i = 0; i < mistakes; i++) {
+        window.draw(lives[i]);
+    }
+
+    if (chickenState != 0) {
+        while (chickenState < 5) {
+            chickenAnimation();
+            chickenState++;
+            window.clear();
+            window.draw(frame);
+            window.draw(screen);
+            window.draw(chicken);
+            for (int i = 0; i < mistakes; i++) {
+                window.draw(lives[i]);
+            }
+            window.draw(score);
+            window.display();
+            Sleep(500);
+        }
+        chickenState = 0;
+    }
+    if(bunnyState!=0) window.draw(bunny);
+    if (mistakes == 3) {
+        gameOver();
+    }
+    else window.display();
 }
 
 void Game::update()
@@ -92,18 +118,24 @@ void Game::update()
         }
         value = 0;
         /*showInfoEggs();*/
-        if ((caughtEggs % (10 * level)) == 0 && caughtEggs > 0) {
+        if ((caughtEggs % (3 * level)) == 0 && caughtEggs > 0) {
             if (spawnRate > 1) {
                 spawnRate--;
                 level++;
+                bunnyState = 1;
                 cout << spawnRate << " : " << level << endl;
             }
         }
         if ((caughtEggs % (20 * level)) == 0 && caughtEggs > 0) {
             if (speed > 4) speed--;
         }
-        if (mistakes == 3) {
-            window.close();
+        if (bunnyState != 0 && ticks < 3) {
+            if (value % 5 == 0)BunnyAniation();
+            ticks++;
+        }
+        else {
+            bunnyState = 0;
+            ticks = 0;
         }
     }
 }
@@ -120,6 +152,17 @@ Game::Game()
     : window(sf::VideoMode(1200, 690), "Nu Pogodi!"),
     th(incrementer)
 {
+    bunny.setSize(Vector2f(605, 340));
+    chicken.setSize(Vector2f(605, 340));
+    life.loadFromFile("./Textures/mistake.png");
+    for (int i = 0; i < 3; i++) {
+        RectangleShape lifeS;
+        lifeS.setTexture(&life);
+        lifeS.setPosition(Vector2f(200 + i*40, 170));
+        lifeS.setSize(Vector2f(605, 340));
+        lives.push_back(lifeS);
+    }
+
     scoreF.loadFromFile("Segment7Standard.otf");
     score.setFont(scoreF);
     score.setPosition(650, 140);
@@ -201,9 +244,43 @@ void Game::reset()
     }
 }
 
+void Game::chickenAnimation()
+{
+    if (failSide < 2) {
+        chicken.setPosition(Vector2f(280, 210));
+        string path = "./Textures/chickenl" + to_string(chickenState) + ".png";
+        chickenT.loadFromFile(path);
+        chicken.setTexture(&chickenT);
+    }
+    else {
+        chicken.setPosition(Vector2f(340, 210));
+        string path = "./Textures/chickenr" + to_string(chickenState) + ".png";
+        chickenT.loadFromFile(path);
+        chicken.setTexture(&chickenT);
+    }
+}
+
 Game::~Game()
 {
     th.join();
+}
+
+void Game::gameOver()
+{
+    reset();
+    mistakes = 0;
+    caughtEggs = 0;
+    value = 0;
+}
+
+void Game::BunnyAniation()
+{
+    bunny.setPosition(Vector2f(250, 190));
+    bunnyState++;
+    if (bunnyState > 2) bunnyState = 1;
+    string path = "./Textures/lvlup" + to_string(bunnyState) + ".png";
+    bunnyT.loadFromFile(path);
+    bunny.setTexture(&bunnyT);
 }
 
 void Game::showInfoEggs()
@@ -234,6 +311,8 @@ void Game::moveEggs()
                 }
                 else if (wolfPos != i) {
                     mistakes++;
+                    failSide = i;
+                    chickenState = 1;
                     reset();
                     cout << spawnRate << " : " << level << endl;
                 }
